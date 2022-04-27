@@ -1,0 +1,21 @@
+[config]
+default_to_workspace = false
+
+[tasks.gh-tun-build-prod]
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.gh-tun-create-dist-folder]
+command = "mkdir"
+args = [
+    "-p",
+    "${HOME}/.local/share/gh/extensions/gh-tun",
+]
+
+[tasks.gh-tun-install]
+command = "cp"
+args = [
+    "./target/release/gh-extension",
+    "${HOME}/.local/share/gh/extensions/gh-tun/gh-tun",
+]
+dependencies = ["gh-tun-build-prod", "gh-tun-create-dist-folder"]

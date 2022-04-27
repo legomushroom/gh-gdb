@@ -1,0 +1,32 @@
+[package]
+name = "gh-tun"
+version = "0.1.0"
+edition = "2021"
+description = "Codespaces TUN extension for GitHub CLI."
+authors = [ "Oleg Solomka <legomushroom@github.com>" ]
+keywords = [ "network", "tun", "tap", "vpn", "bridge", "gh-cli", "github", "codespaces" ]
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# futures = "0.3.17"
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.6", features = ["codec", "io", "io-util", "compat"] }
+clap = { version = "3.1", features = ["derive", "color"] }
+anyhow = "1.0"
+cs-trace = "0.12"
+cs-utils = { version = "0.15.2", features = ["test", "async", "traits"] }
+# async-std = { version = "1.10", features = ["unstable"] }
+# bytes = "1.1"
+# serde = { version = "1", features = ["derive"] }
+# serde_json = { version = "1" }
+chrono = "0.4.1"
+crossterm = "0.23.1"
+# tui = "0.17.0"
+# regex = "1"
+# futures-lite = "1"
+
+[dev-dependencies]
+rstest = "0.12.0"
+k9 = "0.11"
