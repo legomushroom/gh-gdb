@@ -1,0 +1,23 @@
+name: Build & Test (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: full
+
+jobs:
+  build_and_test:
+    name: Build & Test
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Test
+        run: cargo test --release --verbose

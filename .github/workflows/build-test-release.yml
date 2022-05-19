@@ -1,0 +1,253 @@
+on: [push]
+
+name: Build/Test/Release
+
+env:
+  GH_EXTENSION_NAME: oocd
+  GH_ACTOR: ${{ github.actor }}
+  RELEASE_BIN: gh-extension
+  RELEASE_DIR: artifacts
+  GITHUB_TAG: "${{ github.ref }}"
+  MACOS_AMD64_TARGET: x86_64-apple-darwin
+  # LINUX_AMD64_TARGET: x86_64-unknown-linux-musl
+  # LINUX_ARM64_TARGET: aarch64-unknown-linux-gnu
+  # LINUX_ARMV6_TARGET: arm-unknown-linux-gnueabihf
+  # LINUX_ARMV7_TARGET: armv7-unknown-linux-gnueabihf
+
+jobs:
+  # build_and_test_linux:
+  #     name: Build & Test (Linux)
+  #     uses: ./.github/workflows/build-test-reusable.yml
+  #     with:
+  #       os: 'ubuntu-latest'
+
+  build_and_test_macos:
+    name: Build & Test (MacOSx)
+    uses: ./.github/workflows/build-test-reusable.yml
+    with:
+      os: 'macos-latest'
+
+  build:
+    name: Build artifacts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [macos]
+        include:
+          - build: macos
+            os: macos-latest
+            rust: stable
+          # - build: linux
+          #   os: ubuntu-latest
+          #   rust: stable
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Query version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using version tag ${GITHUB_TAG:10}"
+          echo ::set-output name=version::"${GITHUB_TAG:10}"
+      - name: Install Rust
+        if: matrix.rust
+        run: |
+          rustup update ${{ matrix.rust }} --no-self-update
+          rustup default ${{ matrix.rust }}
+      # - name: Install cross compilation tools (Linux)
+      #   if: matrix.build == 'linux'
+      #   run: |
+      #     sudo apt-get update -y
+      #     sudo apt-get install musl-tools -y
+      #     sudo apt-get install -qq gcc-aarch64-linux-gnu
+      #     sudo apt-get install -qq gcc-arm-linux-gnueabihf
+     
+      - name: Build (MacOS)
+        if: matrix.build == 'macos'
+        run: |
+          rustup target add ${{ env.MACOS_AMD64_TARGET }}
+          cargo build --release --target ${{ env.MACOS_AMD64_TARGET }}
+      
+      # - name: Build (Linux AMD64)
+      #   if: matrix.build == 'linux'
+      #   run: |
+      #     rustup target add ${{ env.LINUX_AMD64_TARGET }}
+      #     cargo build --release --target ${{ env.LINUX_AMD64_TARGET }}
+      # - name: Build (Linux ARM64)
+      #   if: matrix.build == 'linux'
+      #   run: |
+      #     rustup target add ${{ env.LINUX_ARM64_TARGET }}
+      #     cargo build --release --target ${{ env.LINUX_ARM64_TARGET }}
+      # - name: Build (Linux ARMv6)
+      #   if: matrix.build == 'linux'
+      #   run: |
+      #     rustup target add ${{ env.LINUX_ARMV6_TARGET }}
+      #     cargo build --release --target ${{ env.LINUX_ARMV6_TARGET }}
+      # - name: Build (Linux ARMv7)
+      #   if: matrix.build == 'linux'
+      #   run: |
+      #     rustup target add ${{ env.LINUX_ARMV7_TARGET }}
+      #     cargo build --release --target ${{ env.LINUX_ARMV7_TARGET }}
+      - name: Create artifact directory
+        run: |
+          mkdir ${{ env.RELEASE_DIR }}
+      - name: Create binary (MacOS)
+        if: matrix.build == 'macos'
+        run: |
+          mv ./target/${{ env.MACOS_AMD64_TARGET }}/release/${{ env.RELEASE_BIN }} ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-darwin-amd64
+      # - name: Create binaries (Linux)
+      #   if: matrix.build == 'linux'
+      #   run: |
+      #     mv ./target/${{ env.LINUX_AMD64_TARGET }}/release/${{ env.RELEASE_BIN }} ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-amd64
+      #     mv ./target/${{ env.LINUX_ARM64_TARGET }}/release/${{ env.RELEASE_BIN }} ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-arm64
+      #     mv ./target/${{ env.LINUX_ARMV6_TARGET }}/release/${{ env.RELEASE_BIN }} ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-armv6
+      #     mv ./target/${{ env.LINUX_ARMV7_TARGET }}/release/${{ env.RELEASE_BIN }} ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-armv7
+      - name: Upload Mac OSx AMD64 binary
+        if: matrix.build == 'macos'
+        uses: actions/upload-artifact@v1
+        with:
+          name: macos
+          path: ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-darwin-amd64
+
+      # - name: Upload Linux AMD64 binary
+      #   if: matrix.build == 'linux'
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: linux
+      #     path: ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-amd64
+
+      # - name: Upload Linux ARM64 binary
+      #   if: matrix.build == 'linux'
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: linux
+      #     path: ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-arm64
+
+      # - name: Upload Linux ARMv6 binary
+      #   if: matrix.build == 'linux'
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: linux
+      #     path: ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-armv6
+
+      # - name: Upload Linux ARMv7 binary
+      #   if: matrix.build == 'linux'
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: linux
+      #     path: ./${{ env.RELEASE_DIR }}/${{ env.GH_EXTENSION_NAME }}-linux-armv7
+
+  # if `v*` tag is used, - create GitHub CLI extension release.
+  # If `dev*` used, - relese to developer repo.
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    name: GitHub Release
+    # needs: [build, build_and_test_linux, build_and_test_macos]
+    needs: [build, build_and_test_macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set `GH_EXTENSION_ACTOR` environment variable
+        run: |
+          if [[ "$GITHUB_TAG" =~ ^refs/tags/v.+ ]]; then echo "GH_EXTENSION_ACTOR=github" >> $GITHUB_ENV; fi
+          if [[ "$GITHUB_TAG" =~ ^refs/tags/dev.+ ]]; then echo "GH_EXTENSION_ACTOR=${GH_ACTOR}" >> $GITHUB_ENV; fi
+      - name: Check if GH_EXTENSION_ACTOR env variable set
+        run: |
+          if [[ -z "$GH_EXTENSION_ACTOR" ]]; then echo "GITHUB_TAG must start with either \"v\" (prod) or \"dev\". e.g. \"v0.1.0\" or \"dev0.1.0\""; exit 1; fi
+      - name: Set extension release repo and secret name env variables
+        run: |
+          echo "GH_EXTENSION_RELEASE_REPO=$GH_EXTENSION_ACTOR/gh-net" >> $GITHUB_ENV;
+        # echo "GH_EXTENSION_RELEASE_SECRET_NAME=GH_EXTENSION_RELEASE_SECRET_${GH_EXTENSION_ACTOR^^}" >> $GITHUB_ENV;
+      - name: Query version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using version tag ${GITHUB_TAG:10}"
+          echo ::set-output name=version::"${GITHUB_TAG:10}"
+      - name: Download MacOS binary
+        uses: actions/download-artifact@v1
+        with:
+          name: macos
+
+      # - name: Download Linux binary
+      #   uses: actions/download-artifact@v1
+      #   with:
+      #     name: linux
+
+      - name: Checkout release repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.GH_EXTENSION_RELEASE_REPO }}
+          path: './release-repo'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release repo tag
+        run: |
+          cd ./release-repo
+          pwd
+          git config user.name legomushroom
+          git config user.email legomushroom@github.com
+          git tag -a ${{ steps.get_version.outputs.VERSION }} -m "Release ${{ steps.get_version.outputs.VERSION }}"
+          echo "${{ steps.get_version.outputs.VERSION }}"
+          git push --tags
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          owner: ${{ env.GH_EXTENSION_ACTOR }}
+          repo: gh-net
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          commitish: main
+
+      - name: Release Mac OSx AMD64 binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_content_type: application/x-binary
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_name: ${{ env.GH_EXTENSION_NAME }}-darwin-amd64
+          asset_path: ./macos/${{ env.GH_EXTENSION_NAME }}-darwin-amd64
+
+      # - name: Release Linux AMD64 binary
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets[env.GH_EXTENSION_RELEASE_SECRET_NAME] }}
+      #   with:
+      #     asset_content_type: application/x-binary
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_name: ${{ env.GH_EXTENSION_NAME }}-linux-amd64
+      #     asset_path: ./linux/${{ env.GH_EXTENSION_NAME }}-linux-amd64
+
+      # - name: Release Linux ARM64 binary
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets[env.GH_EXTENSION_RELEASE_SECRET_NAME] }}
+      #   with:
+      #     asset_content_type: application/x-binary
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_name: ${{ env.GH_EXTENSION_NAME }}-linux-arm64
+      #     asset_path: ./linux/${{ env.GH_EXTENSION_NAME }}-linux-arm64
+
+      # - name: Release Linux ARMv6 binary
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets[env.GH_EXTENSION_RELEASE_SECRET_NAME] }}
+      #   with:
+      #     asset_content_type: application/x-binary
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_name: ${{ env.GH_EXTENSION_NAME }}-linux-armv6
+      #     asset_path: ./linux/${{ env.GH_EXTENSION_NAME }}-linux-armv6
+
+      # - name: Release Linux ARMv7 binary
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets[env.GH_EXTENSION_RELEASE_SECRET_NAME] }}
+      #   with:
+      #     asset_content_type: application/x-binary
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_name: ${{ env.GH_EXTENSION_NAME }}-linux-armv7
+      #     asset_path: ./linux/${{ env.GH_EXTENSION_NAME }}-linux-armv7
