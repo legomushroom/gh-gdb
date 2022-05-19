@@ -21,6 +21,7 @@ pub async fn start_openocd_command(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
+        .kill_on_drop(true)
         .spawn()?
         .output().await?;
 

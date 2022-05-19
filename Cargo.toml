@@ -1,8 +1,8 @@
 [package]
-name = "gh-oocd"
+name = "gh-gdb"
 version = "0.1.0"
 edition = "2021"
-description = "OpenOCD CLI extension for GitHub Codespaces."
+description = "GDB CLI extension for GitHub Codespaces."
 authors = [ "Oleg Solomka <legomushroom@github.com>" ]
 keywords = [  ]
 publish = false
@@ -25,7 +25,7 @@ chrono = "0.4.1"
 crossterm = "0.23.1"
 # tui = "0.17.0"
 # regex = "1"
-# futures-lite = "1"
+futures-lite = "1"
 
 [dev-dependencies]
 rstest = "0.12.0"

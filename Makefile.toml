@@ -1,21 +1,21 @@
 [config]
 default_to_workspace = false
 
-[tasks.gh-tun-build-prod]
+[tasks.gh-gdb-build-prod]
 command = "cargo"
 args = ["build", "--release"]
 
-[tasks.gh-tun-create-dist-folder]
+[tasks.gh-gdb-create-dist-folder]
 command = "mkdir"
 args = [
     "-p",
-    "${HOME}/.local/share/gh/extensions/gh-oocd",
+    "${HOME}/.local/share/gh/extensions/gh-gdb",
 ]
 
-[tasks.gh-oocd-install]
+[tasks.gh-gdb-install]
 command = "cp"
 args = [
-    "./target/release/gh-extension",
-    "${HOME}/.local/share/gh/extensions/gh-oocd/gh-oocd",
+    "./target/release/gh-gdb",
+    "${HOME}/.local/share/gh/extensions/gh-gdb/gh-gdb",
 ]
-dependencies = ["gh-oocd-build-prod", "gh-oocd-create-dist-folder"]
+dependencies = ["gh-gdb-build-prod", "gh-gdb-create-dist-folder"]

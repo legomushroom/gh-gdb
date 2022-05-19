@@ -3,9 +3,9 @@ on: [push]
 name: Build/Test/Release
 
 env:
-  GH_EXTENSION_NAME: oocd
+  GH_EXTENSION_NAME: gdb
   GH_ACTOR: ${{ github.actor }}
-  RELEASE_BIN: gh-oocd
+  RELEASE_BIN: gh-gdb
   RELEASE_DIR: artifacts
   GITHUB_TAG: "${{ github.ref }}"
   MACOS_AMD64_TARGET: x86_64-apple-darwin
@@ -197,7 +197,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           owner: ${{ env.GH_EXTENSION_ACTOR }}
-          repo: gh-oocd
+          repo: gh-gdb
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           release_name: Release ${{ steps.get_version.outputs.VERSION }}
           commitish: main
