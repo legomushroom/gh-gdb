@@ -1,5 +1,5 @@
 use clap::StructOpt;
-use gh_tun::CLI;
+use gh_oocd::CLI;
 
 #[tokio::main]
 async fn main() {

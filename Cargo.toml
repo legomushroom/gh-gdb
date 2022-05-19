@@ -1,10 +1,10 @@
 [package]
-name = "gh-tun"
+name = "gh-oocd"
 version = "0.1.0"
 edition = "2021"
-description = "Codespaces TUN extension for GitHub CLI."
+description = "OpenOCD CLI extension for GitHub Codespaces."
 authors = [ "Oleg Solomka <legomushroom@github.com>" ]
-keywords = [ "network", "tun", "tap", "vpn", "bridge", "gh-cli", "github", "codespaces" ]
+keywords = [  ]
 publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

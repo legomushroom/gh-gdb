@@ -9,13 +9,13 @@ args = ["build", "--release"]
 command = "mkdir"
 args = [
     "-p",
-    "${HOME}/.local/share/gh/extensions/gh-tun",
+    "${HOME}/.local/share/gh/extensions/gh-oocd",
 ]
 
-[tasks.gh-tun-install]
+[tasks.gh-oocd-install]
 command = "cp"
 args = [
     "./target/release/gh-extension",
-    "${HOME}/.local/share/gh/extensions/gh-tun/gh-tun",
+    "${HOME}/.local/share/gh/extensions/gh-oocd/gh-oocd",
 ]
-dependencies = ["gh-tun-build-prod", "gh-tun-create-dist-folder"]
+dependencies = ["gh-oocd-build-prod", "gh-oocd-create-dist-folder"]

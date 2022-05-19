@@ -5,7 +5,7 @@ name: Build/Test/Release
 env:
   GH_EXTENSION_NAME: oocd
   GH_ACTOR: ${{ github.actor }}
-  RELEASE_BIN: gh-extension
+  RELEASE_BIN: gh-oocd
   RELEASE_DIR: artifacts
   GITHUB_TAG: "${{ github.ref }}"
   MACOS_AMD64_TARGET: x86_64-apple-darwin
@@ -156,7 +156,7 @@ jobs:
           if [[ -z "$GH_EXTENSION_ACTOR" ]]; then echo "GITHUB_TAG must start with either \"v\" (prod) or \"dev\". e.g. \"v0.1.0\" or \"dev0.1.0\""; exit 1; fi
       - name: Set extension release repo and secret name env variables
         run: |
-          echo "GH_EXTENSION_RELEASE_REPO=$GH_EXTENSION_ACTOR/gh-net" >> $GITHUB_ENV;
+          echo "GH_EXTENSION_RELEASE_REPO=$GH_EXTENSION_ACTOR/gh-$GH_EXTENSION_NAME" >> $GITHUB_ENV;
         # echo "GH_EXTENSION_RELEASE_SECRET_NAME=GH_EXTENSION_RELEASE_SECRET_${GH_EXTENSION_ACTOR^^}" >> $GITHUB_ENV;
       - name: Query version number
         id: get_version
@@ -197,7 +197,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           owner: ${{ env.GH_EXTENSION_ACTOR }}
-          repo: gh-net
+          repo: gh-oocd
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           release_name: Release ${{ steps.get_version.outputs.VERSION }}
           commitish: main
