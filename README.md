@@ -1,1 +1,1 @@
-# OpenOCD for GitHub Codespaces
+# GDB for GitHub Codespaces
